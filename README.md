@@ -23,7 +23,8 @@ To install the required dependencies, you can use:
 pip install -r requirements.txt
 ```
 
-# Pipeline config
+# Config 
+## pipeline 
 The pipeline consists of stages such as clustring with CSF, footprint and LoD generation. Each stage has parameters depending on stage's algorithm. Refer to the below example.  
 ```
 [
@@ -68,5 +69,35 @@ The pipeline consists of stages such as clustring with CSF, footprint and LoD ge
 ]
 ```
 
-# Reference
+## color map 
+Color maps can be used for PCD clustering, but the current version is not complete.
+```
+{
+    "name": "color map filter",
+    "version": "1.0.0",
+    "description": "segmentation using color map",
+    "author": "",
+    "email": "",
+    "segment": [
+        {
+            "name": "house",
+            "RGB1": [95, 108, 118],
+            "RGB2": [167, 171, 189]
+        }, 
+        {
+            "name": "tree",
+            "RGB1": [30, 50, 30],
+            "RGB2": [140, 150, 60]
+        }, 
+        {
+            "name": "other"
+        }
+    ]
+}
+```
+
+# Acknowledge
 W. Zhang, J. Qi*, P. Wan, H. Wang, D. Xie, X. Wang, and G. Yan, “An Easy-to-Use Airborne LiDAR Data Filtering Method Based on Cloth Simulation,” Remote Sens., vol. 8, no. 6, p. 501, 2016. (http://www.mdpi.com/2072-4292/8/6/501/htm)
+
+# License
+MIT
