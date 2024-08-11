@@ -9,7 +9,7 @@ The scan to model pipeline is an open source tool that automatically generates m
 - Pipeline config file support (refer to pipeline config section)
 
 ## Revision history
-- 0.1: draft version. basic functions supports.
+- 0.1: draft version. basic functions supports. It's still in its early stages, but if you have the will, you can improve the parts that are lacking.
 
 ## Examples
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/scan_to_model_pipeline.gif)
