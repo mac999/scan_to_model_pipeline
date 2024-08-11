@@ -6,7 +6,7 @@
 # function: clustring. filtering. make footprints. make LoD1. make spreadsheet
 # license: MIT license
 # reference:
-#   http://ramm.bnu.edu.cn/projects/CSF/download/
+#   W. Zhang, J. Qi*, P. Wan, H. Wang, D. Xie, X. Wang, and G. Yan, “An Easy-to-Use Airborne LiDAR Data Filtering Method Based on Cloth Simulation,” Remote Sens., vol. 8, no. 6, p. 501, 2016. (http://www.mdpi.com/2072-4292/8/6/501/htm)
 #   http://ramm.bnu.edu.cn/projects/CSF/document/
 # 
 import argparse, math, numpy as np, os, sys, json, shutil, re, traceback, random, contextlib
