@@ -18,6 +18,7 @@ The scan to model pipeline (SMP) is an open source tool that automatically gener
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image3.PNG)
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image4.PNG)
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image5.PNG)
+![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image6.PNG)
 
 # Install
 To install the required dependencies, you can use:
