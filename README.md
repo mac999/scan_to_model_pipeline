@@ -1,12 +1,12 @@
-# Scan to Model Pipeline
+# 🚀Scan to Model Pipeline
 3D scan data such as PCD (point cloud data) to model (ply) conversion.</br>
-** PCD filtering using color map, CSF(W. Zhang etc)
-** Clustering such as house, tree
-** Footprint extraction
-** Spreadsheet including ID, area, height etc
+- PCD filtering using color map, CSF(W. Zhang etc)
+- Clustering such as house, tree
+- Footprint extraction
+- Spreadsheet including ID, area, height etc
 
 ## Revision history
-** 0.1: draft version. basic functions supports.
+- 0.1: draft version. basic functions supports.
 
 ## Examples
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/scan_to_model_pipeline.gif)
