@@ -1,0 +1,22 @@
+{
+    "name": "color map filter",
+    "version": "1.0.0",
+    "description": "segmentation using color map",
+    "author": "",
+    "email": "",
+    "segment": [
+        {
+            "name": "house",
+            "RGB1": [95, 108, 118],
+            "RGB2": [167, 171, 189]
+        }, 
+        {
+            "name": "tree",
+            "RGB1": [30, 50, 30],
+            "RGB2": [140, 150, 60]
+        }, 
+        {
+            "name": "other"
+        }
+    ]
+}
