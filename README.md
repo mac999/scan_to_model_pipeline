@@ -1,6 +1,6 @@
-# 🚀Scan to Model Pipeline
+# 🚀Scan to Model Pipeline (SMP)
 3D scan data such as PCD (point cloud data) to model (ply) conversion.</br>
-The scan to model pipeline is an open source tool that automatically generates mesh model files (PLY) by filtering and clustering data in LAS, a point cloud format. Using this, you can automate the extraction of buildings, ground, and trees from PCD. It is structured as a pipeline, so you can easily adjust parameters for each data processing step. This open source can be used to generate statistical numerical, low LoD level model files of objects from large number of PCD files.</br>
+The scan to model pipeline (SMP) is an open source tool that automatically generates mesh model files (PLY) by filtering and clustering data in LAS, a point cloud format. Using this, you can automate the extraction of buildings, ground, and trees from PCD. It is structured as a pipeline, so you can easily adjust parameters for each data processing step. This open source can be used to generate statistical numerical, low LoD level model files of objects from large number of PCD files.</br>
 
 - PCD filtering using color map, CSF(W. Zhang etc)
 - Clustering such as house, tree
