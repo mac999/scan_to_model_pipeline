@@ -10,8 +10,8 @@ The scan to model pipeline (SMP) is an open source tool that automatically gener
 
 ## Revision history
 It's still in its early stages, but if you have the will, you can improve the parts that are lacking.</br>
-- 0.1: draft version. basic functions supports.
-- 0.15: add pipeline stage architecture.
+- 0.1: 2024.1. draft version. basic functions supports.
+- 0.15: 2024.8. add pipeline stage architecture.
    
 ## Examples
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/scan_to_model_pipeline.gif)
