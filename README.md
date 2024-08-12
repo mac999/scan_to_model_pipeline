@@ -39,28 +39,32 @@ The pipeline consists of stages such as clustring with CSF, footprint and LoD ge
 			"time_step": 0.65, 
 			"class_threshold": 0.5, 
 			"interations": 500 
-		}
+		},
+		"output_tag": "{segment}_{cloth_resolution}"
 	}, 
 	{
 		"name": "cluster",
+		"input_filter": ".*non_ground.*",
 		"config": {
 			"eps": 3.0, 
 			"min_samples": 10,
 			"remove_samples": 100,
 			"random_color": false 
-		}
+		}, 
+		"output_tag": "{segment}"
 	}, 
 	{
 		"name": "footprint",
 		"config": {
 			"alpha_shape_factor": 0.2, 
 			"simplify_tolerance": 0.1
-		}
+		}, 
+		"output_tag": "{segment}"
 	}, 
 	{
 		"name": "LoD",
 		"config": {
-			"ground": "$ground"
+			"csf.ground": "$ground"
 		}
 	},
 	{
