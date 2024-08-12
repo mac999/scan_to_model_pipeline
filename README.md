@@ -105,7 +105,8 @@ Zhang, W., Qi, J., Wan, P., Wang, H., Xie, D., Wang, X. and Yan, G., 2016. An ea
 Beckmann, N., Kriegel, H.P., Schneider, R. and Seeger, B., 1990, May. The R*-tree: An efficient and robust access method for points and rectangles. In Proceedings of the 1990 ACM SIGMOD international conference on Management of data (pp. 322-331).</br>
 
 # Author
-Ph.D, Kang. laputa99999@gmail.com
+Ph.D, Kang. laputa99999@gmail.com</br>
+[linkedin](https://www.linkedin.com/in/tae-wook-kang-64a83917/)
 
 # License
 [MIT License](https://pitt.libguides.com/openlicensing/MIT)
