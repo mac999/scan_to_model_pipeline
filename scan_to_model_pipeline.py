@@ -615,63 +615,6 @@ def scan_to_model_process(args):
 
 	return outputs_result
 
-def scan_to_model_pipeline(args):
-	outputs_result = []
-
-	try:	
-		pipeline = load_pipeline(args.pipeline)
-
-		# delete_files_in_folder(args.output)
-		make_folders(args.output)
-
-		# filtering CSF
-		dataset = [{
-			"input": args.input,
-			"output": args.output,
-			"active": True}]
-
-		stage = get_pipeline_stage(pipeline, 'csf')
-		config = stage['config']
-		dataset = update_module_output('csf', '{segment}_{cloth_resolution}', dataset)
-		outputs_csf = filtering_csf(dataset, config)
-		outputs_result.append(outputs_csf.copy())
-		ground_fname = get_value_from_name(outputs_csf, 'name', 'ground', 'output')
-
-		# make clusters
-		dataset = update_output_to_input('cluster', '{segment}', outputs_csf)
-		dataset = update_active_inputs(dataset, 'name', '.*non_ground.*', True)
-		stage = get_pipeline_stage(pipeline, 'cluster')
-		config = stage['config']
-		outputs_cluster = make_clusters(dataset, config)
-		outputs_result.append(outputs_cluster.copy())
-
-		# make dataset from outputs
-		dataset = update_output_to_input('footprint', '{segment}', outputs_cluster)
-		stage = get_pipeline_stage(pipeline, 'footprint')
-		config = stage['config']
-		outputs_footprint = make_footprints(dataset, config)
-		outputs_result.append(outputs_footprint.copy())
-
-		# make LoD1
-		dataset = update_output_to_input('LoD', '', outputs_footprint)
-		stage = get_pipeline_stage(pipeline, 'LoD')
-		config = stage['config']
-		config['ground'] = ground_fname
-		outputs_geo = make_lod1_geometry(dataset, config)
-		outputs_result.append(outputs_geo.copy())
-
-		# make spreadsheet from output
-		dataset = update_output_to_input('sheet', '', outputs_geo)
-		stage = get_pipeline_stage(pipeline, 'sheet')
-		config = stage['config']	
-		outputs_xls = make_spreadsheet(dataset, config) 
-		outputs_result.append(outputs_xls.copy())
-
-	except Exception as e:
-		print(traceback.format_exc())
-
-	return outputs_result
-
 def main():
 	argparser = argparse.ArgumentParser(description="CSF Filtering")
 	# argparser.add_argument("--input", default="./input/belleview_group.las", required=False, help="Input file name")
