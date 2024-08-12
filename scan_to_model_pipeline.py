@@ -2,7 +2,9 @@
 # description: PCD to Segments
 # author: Taewook Kang
 # date: 2023.11.12
-# version: 0.1
+# revision history
+#   0.1: initial implementation
+#   0.15: add pipeline architecture
 # function: clustring. filtering. make footprints. make LoD1. make spreadsheet
 # license: MIT license
 # reference:
