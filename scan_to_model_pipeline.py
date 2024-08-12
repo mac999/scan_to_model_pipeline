@@ -6,7 +6,9 @@
 # function: clustring. filtering. make footprints. make LoD1. make spreadsheet
 # license: MIT license
 # reference:
-#   W. Zhang, J. Qi*, P. Wan, H. Wang, D. Xie, X. Wang, and G. Yan, “An Easy-to-Use Airborne LiDAR Data Filtering Method Based on Cloth Simulation,” Remote Sens., vol. 8, no. 6, p. 501, 2016. (http://www.mdpi.com/2072-4292/8/6/501/htm)
+#   Deng, D., 2020, September. DBSCAN clustering algorithm based on density. In 2020 7th international forum on electrical engineering and automation (IFEEA) (pp. 949-953). IEEE.
+#   Zhang, W., Qi, J., Wan, P., Wang, H., Xie, D., Wang, X. and Yan, G., 2016. An easy-to-use airborne LiDAR data filtering method based on cloth simulation. Remote sensing, 8(6), p.501.
+#   Beckmann, N., Kriegel, H.P., Schneider, R. and Seeger, B., 1990, May. The R*-tree: An efficient and robust access method for points and rectangles. In Proceedings of the 1990 ACM SIGMOD international conference on Management of data (pp. 322-331).
 #   http://ramm.bnu.edu.cn/projects/CSF/document/
 # 
 import argparse, math, numpy as np, os, sys, json, shutil, re, traceback, random, contextlib
@@ -557,6 +559,62 @@ def get_pipeline_stage(pipeline, name):
 			return stage
 	return None
 
+def scan_to_model_process(args):
+	function_map = {
+		'csf': filtering_csf,
+		'color': filtering_color,
+		'cluster': make_clusters,
+		'footprint': make_footprints,
+		'LoD': make_lod1_geometry,
+		'sheet': make_spreadsheet
+	}
+
+	outputs_result = []
+
+	try:	
+		pipeline = load_pipeline(args.pipeline)
+		make_folders(args.output)
+
+		dataset = [{
+			"input": args.input,
+			"output": args.output,
+			"active": True}]
+
+		outputs_result = []
+		output = dataset
+		for index, stage in enumerate(pipeline):
+			name = stage['name']
+			output_tag = ''
+			if 'output_tag' in stage:
+				output_tag = stage['output_tag']
+			input_filter = ''
+			if 'input_filter' in stage:
+				input_filter = stage['input_filter']
+
+			if index == 0:
+				dataset = update_module_output(name, output_tag, output)
+			else:
+				dataset = update_output_to_input(name, output_tag, output)
+			if len(input_filter):
+				dataset = update_active_inputs(dataset, 'name', input_filter, True)
+
+			config = stage['config']
+			if 'csf.ground' in config:
+				ground_fname = get_value_from_name(outputs_result[0]['dataset'], 'name', 'ground', 'input') # TBD. should be generized.
+				config['ground'] = ground_fname
+
+			output = function_map[name](dataset, config)
+			result = {
+				'name': name,
+				'dataset': output.copy()
+			}
+			outputs_result.append(result)
+
+	except Exception as e:
+		print(traceback.format_exc())
+
+	return outputs_result
+
 def scan_to_model_pipeline(args):
 	outputs_result = []
 
@@ -625,7 +683,8 @@ def main():
 	argparser.add_argument("--pipeline", default="pipeline.json", required=False, help="pipeline file name")
 	args = argparser.parse_args()
 
-	scan_to_model_pipeline(args)
+	scan_to_model_process(args)
+	# scan_to_model_pipeline(args)
 
 if __name__ == "__main__":
 	main()
