@@ -100,7 +100,12 @@ Color maps can be used for PCD clustering, but the current version is not comple
 ```
 
 # Acknowledge
-W. Zhang, J. Qi*, P. Wan, H. Wang, D. Xie, X. Wang, and G. Yan, “An Easy-to-Use Airborne LiDAR Data Filtering Method Based on Cloth Simulation,” Remote Sens., vol. 8, no. 6, p. 501, 2016. (http://www.mdpi.com/2072-4292/8/6/501/htm)
+Deng, D., 2020, September. DBSCAN clustering algorithm based on density. In 2020 7th international forum on electrical engineering and automation (IFEEA) (pp. 949-953). IEEE.
+Zhang, W., Qi, J., Wan, P., Wang, H., Xie, D., Wang, X. and Yan, G., 2016. An easy-to-use airborne LiDAR data filtering method based on cloth simulation. Remote sensing, 8(6), p.501.
+Beckmann, N., Kriegel, H.P., Schneider, R. and Seeger, B., 1990, May. The R*-tree: An efficient and robust access method for points and rectangles. In Proceedings of the 1990 ACM SIGMOD international conference on Management of data (pp. 322-331).
+
+# Author
+Ph.D, Kang. laputa99999@gmail.com
 
 # License
 [MIT License](https://pitt.libguides.com/openlicensing/MIT)
