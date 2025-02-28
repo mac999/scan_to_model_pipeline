@@ -9,9 +9,14 @@ import glob, numpy as np, os, time, sys, io, json, subprocess, argparse, readlin
 import open3d as o3d, laspy
 import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
-from scan_to_model_pipeline import scan_to_model_pipeline
+from scan_to_model_pipeline import *
 
 isMacOS = (platform.system() == "Darwin")
+
+class args_param:
+	input = './input/OTP_EPSG26910_5703_38_-122_ca_sunrise_memorial.las'
+	output = './output/opt/sunrise.las'
+	pipeline = 'pipeline.json'
 
 class Settings:
 	UNLIT = "defaultUnlit"
@@ -190,12 +195,12 @@ class AppWindow:
 	MENU_OPEN = 1
 	MENU_EXPORT = 2
 	MENU_QUIT = 3
-	MENU_PCD_PIPELINE = 10
-	MENU_LOAD_PCD_SEGMENT = 11
-	MENU_CONVERT_LAS_TO_PCD = 12
-	MENU_SHOW_SETTINGS = 20
-	MENU_SHOW_EXTENTS = 21
-	MENU_ABOUT = 31
+	MENU_PCD_PIPELINE = 20
+	MENU_LOAD_PCD_SEGMENT = 21
+	MENU_CONVERT_LAS_TO_PCD = 22
+	MENU_SHOW_SETTINGS = 30
+	MENU_SHOW_EXTENTS = 31
+	MENU_ABOUT = 40
 
 	DEFAULT_IBL = "default"
 
@@ -587,7 +592,7 @@ class AppWindow:
 		dlg.add_filter(
 			".xyz .xyzn .xyzrgb .ply .pcd .pts",
 			"Point cloud files (.xyz, .xyzn, .xyzrgb, .ply, "
-			".pcd, .pts)")
+			".pcd, .pts, .las, .laz)")
 		dlg.add_filter(".ply", "Polygon files (.ply)")
 		dlg.add_filter(".stl", "Stereolithography files (.stl)")
 		dlg.add_filter(".fbx", "Autodesk Filmbox files (.fbx)")
@@ -632,11 +637,6 @@ class AppWindow:
 	def _on_menu_quit(self):
 		gui.Application.instance.quit()
 
-	class args_param:
-		input = './input/OTP_EPSG26910_5703_38_-122_ca_sunrise_memorial.las'
-		output = './output/opt/sunrise.las'
-		pipeline = 'pipeline.json'
-
 	def _on_menu_pcd_pipeline(self):
 		# argparser.add_argument("--input", default="./input/belleview_group.las", required=False, help="Input file name")
 		# argparser.add_argument("--output", default="./output/belleview/belleview.las", required=False, help="Output file name")
@@ -645,7 +645,7 @@ class AppWindow:
 		# argparser.add_argument("--input", default="./input/OTP_EPSG26910_5703_38_-122_ca_sunrise_memorial.las", required=False, help="Input file name")
 		# argparser.add_argument("--output", default="./output/opt/sunrise.las", required=False, help="Output file name")
 		args = args_param() # TBD. should be modified by user. just test.
-		outputs_result = scan_to_model_pipeline(args)
+		outputs_result = scan_to_model_process(args)
 
 	def _on_menu_convert_las_to_pcd(self):
 		convert_las_to_pcd('./output/belleview/*.las')

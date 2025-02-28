@@ -568,7 +568,8 @@ def scan_to_model_process(args):
 		'cluster': make_clusters,
 		'footprint': make_footprints,
 		'LoD': make_lod1_geometry,
-		'sheet': make_spreadsheet
+		'sheet': make_spreadsheet, 
+		'section': filtering_section
 	}
 
 	outputs_result = []
@@ -614,6 +615,7 @@ def scan_to_model_process(args):
 
 	except Exception as e:
 		print(traceback.format_exc())
+		pass
 
 	return outputs_result
 
