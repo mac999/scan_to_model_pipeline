@@ -5,6 +5,7 @@
 # revision history
 #   0.1: initial implementation
 #   0.15: add pipeline architecture
+#   0.3: refactoring
 # function: clustring. filtering. make footprints. make LoD1. make spreadsheet
 # license: MIT license
 # reference:
@@ -292,7 +293,7 @@ def view_tin(ground_xyz, tri):
 	ax.plot_trisurf(ground_xyz[:,0], ground_xyz[:,1], ground_xyz[:,2], triangles=tri.simplices, cmap=plt.cm.Spectral)
 	plt.show()
 
-import pyvista as pv, pydeck as pdk, meshio
+import pyvista as pv # , pydeck as pdk, meshio
 from shapely.geometry import Polygon, MultiPolygon, mapping
 
 def extrude_polygon(poly, height):  
@@ -561,7 +562,7 @@ def get_pipeline_stage(pipeline, name):
 			return stage
 	return None
 
-def scan_to_model_process(args):
+def scan_to_model_process(args, progress_tqdm=tqdm):
 	function_map = {
 		'csf': filtering_csf,
 		'color': filtering_color,
@@ -574,60 +575,60 @@ def scan_to_model_process(args):
 
 	outputs_result = []
 
-	try:	
-		pipeline = load_pipeline(args.pipeline)
-		make_folders(args.output)
+	pipeline = load_pipeline(args.pipeline)
+	make_folders(args.output)
 
-		dataset = [{
-			"input": args.input,
-			"output": args.output,
-			"active": True}]
+	dataset = [{
+		"input": args.input,
+		"output": args.output,
+		"active": True}]
 
-		outputs_result = []
-		output = dataset
-		for index, stage in enumerate(pipeline):
-			name = stage['name']
-			output_tag = ''
-			if 'output_tag' in stage:
-				output_tag = stage['output_tag']
-			input_filter = ''
-			if 'input_filter' in stage:
-				input_filter = stage['input_filter']
+	outputs_result = []
+	output = dataset
+	index = 0
+	for stage in progress_tqdm(pipeline, desc='scan to model processing...'):
+		name = stage['name']
+		output_tag = ''
+		if 'output_tag' in stage:
+			output_tag = stage['output_tag']
+		input_filter = ''
+		if 'input_filter' in stage:
+			input_filter = stage['input_filter']
 
-			if index == 0:
-				dataset = update_module_output(name, output_tag, output)
-			else:
-				dataset = update_output_to_input(name, output_tag, output)
-			if len(input_filter):
-				dataset = update_active_inputs(dataset, 'name', input_filter, True)
+		if index == 0:
+			dataset = update_module_output(name, output_tag, output)
+		else:
+			dataset = update_output_to_input(name, output_tag, output)
+		if len(input_filter):
+			dataset = update_active_inputs(dataset, 'name', input_filter, True)
 
-			config = stage['config']
-			if 'csf.ground' in config:
-				ground_fname = get_value_from_name(outputs_result[0]['dataset'], 'name', 'ground', 'input') # TBD. should be generized.
-				config['ground'] = ground_fname
+		config = stage['config']
+		if 'csf.ground' in config:
+			ground_fname = get_value_from_name(outputs_result[0]['dataset'], 'name', 'ground', 'input') # TBD. should be generized.
+			config['ground'] = ground_fname
 
-			output = function_map[name](dataset, config)
-			result = {
-				'name': name,
-				'dataset': output.copy()
-			}
-			outputs_result.append(result)
-
-	except Exception as e:
-		print(traceback.format_exc())
-		pass
+		output = function_map[name](dataset, config)
+		result = {
+			'name': name,
+			'dataset': output.copy()
+		}
+		outputs_result.append(result)
+		index += 1
 
 	return outputs_result
 
 def main():
+	# get current module's path
+	module_path = os.path.dirname(os.path.abspath(__file__))
+
 	argparser = argparse.ArgumentParser(description="CSF Filtering")
 	# argparser.add_argument("--input", default="./input/belleview_group.las", required=False, help="Input file name")
 	# argparser.add_argument("--output", default="./output/belleview/belleview.las", required=False, help="Output file name")
 	# argparser.add_argument("--input", default="./input/downsampledlesscloudEURO3.las", required=False, help="Input file name")
 	# argparser.add_argument("--output", default="./output/euro3/EURO3.las", required=False, help="Output file name")
-	argparser.add_argument("--input", default="./input/OTP_EPSG26910_5703_38_-122_ca_sunrise_memorial.las", required=False, help="Input file name")
-	argparser.add_argument("--output", default="./output/opt/sunrise.las", required=False, help="Output file name")
-	argparser.add_argument("--pipeline", default="pipeline.json", required=False, help="pipeline file name")
+	argparser.add_argument("--input", default=f"{module_path}/input/OTP_EPSG26910_5703_38_-122_ca_sunrise_memorial.las", required=False, help="Input file name")
+	argparser.add_argument("--output", default=f"{module_path}/output/opt/sunrise.las", required=False, help="Output file name")
+	argparser.add_argument("--pipeline", default=f"{module_path}/pipeline.json", required=False, help="pipeline file name")
 	args = argparser.parse_args()
 
 	scan_to_model_process(args)
