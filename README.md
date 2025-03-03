@@ -24,6 +24,8 @@ It's still in its early stages, but if you have the will, you can improve the pa
 - 0.15: 2024.8. add pipeline stage architecture.
 - 0.2: 2025.2. [web app service as prototype](https://scan-to-model-app.fly.dev/). bug fixed. 
 ![web application as demo version](https://github.com/mac999/scan_to_model_pipeline/blob/main/image8.gif)
+- 0.3: refactoring
+- 0.4: support SAM model for segmentation using CUDA
    
 # Install
 To install the required dependencies, you can use:
@@ -109,9 +111,10 @@ Color maps can be used for PCD clustering, but the current version is not comple
 ```
 
 # Acknowledge
-Deng, D., 2020, September. DBSCAN clustering algorithm based on density. In 2020 7th international forum on electrical engineering and automation (IFEEA) (pp. 949-953). IEEE.</br>
-Zhang, W., Qi, J., Wan, P., Wang, H., Xie, D., Wang, X. and Yan, G., 2016. An easy-to-use airborne LiDAR data filtering method based on cloth simulation. Remote sensing, 8(6), p.501.</br>
-Beckmann, N., Kriegel, H.P., Schneider, R. and Seeger, B., 1990, May. The R*-tree: An efficient and robust access method for points and rectangles. In Proceedings of the 1990 ACM SIGMOD international conference on Management of data (pp. 322-331).</br>
+- Deng, D., 2020, September. DBSCAN clustering algorithm based on density. In 2020 7th international forum on electrical engineering and automation (IFEEA) (pp. 949-953). IEEE.
+- Zhang, W., Qi, J., Wan, P., Wang, H., Xie, D., Wang, X. and Yan, G., 2016. An easy-to-use airborne LiDAR data filtering method based on cloth simulation. Remote sensing, 8(6), p.501.
+- Beckmann, N., Kriegel, H.P., Schneider, R. and Seeger, B., 1990, May. The R*-tree: An efficient and robust access method for points and rectangles. In Proceedings of the 1990 ACM SIGMOD international conference on Management of data (pp. 322-331).
+- segment-lidar using SAM model.
 
 # Author
 Ph.D, Kang. laputa99999@gmail.com</br>
