@@ -184,7 +184,24 @@ def make_clusters(dataset, config):
 			cluster_points = points[labels == i]
 			if len(cluster_points) <= remove_samples:
 				continue
-			if inFile.header.point_format.id == 1: # https://laspy.readthedocs.io/en/latest/examples.html#creating-a-new-lasdata
+			if inFile.header.point_format.id < 6: # https://laspy.readthedocs.io/en/latest/examples.html#creating-a-new-lasdata
+				''' https://github.com/laspy/laspy/blob/master/laspy/point/dims.py
+				POINT_FORMAT_DIMENSIONS = PointFormatDict(
+					{
+						0: POINT_FORMAT_0,
+						1: POINT_FORMAT_0 + ("gps_time",),
+						2: POINT_FORMAT_0 + COLOR_FIELDS_NAMES,
+						3: POINT_FORMAT_0 + ("gps_time",) + COLOR_FIELDS_NAMES,
+						4: POINT_FORMAT_0 + ("gps_time",) + WAVEFORM_FIELDS_NAMES,
+						5: POINT_FORMAT_0 + ("gps_time",) + COLOR_FIELDS_NAMES + WAVEFORM_FIELDS_NAMES,
+						6: POINT_FORMAT_6,
+						7: POINT_FORMAT_6 + COLOR_FIELDS_NAMES,
+						8: POINT_FORMAT_6 + COLOR_FIELDS_NAMES + ("nir",),
+						9: POINT_FORMAT_6 + WAVEFORM_FIELDS_NAMES,
+						10: POINT_FORMAT_6 + COLOR_FIELDS_NAMES + ("nir",) + WAVEFORM_FIELDS_NAMES,
+					}
+				)
+				'''
 				header = laspy.LasHeader(point_format=2, version="1.2") # https://laspy.readthedocs.io/en/latest/intro.html#point-format-2
 				outFile = laspy.LasData(header)
 				
@@ -207,6 +224,90 @@ def make_clusters(dataset, config):
 			seg = {'name': f'{name}_{i}', 'output': output_cluster_fname}
 			outputs.append(seg)
 		 		
+	return outputs
+
+def make_segment(dataset, config):
+	if len(dataset) == 0:
+		return None
+
+	from segment_lidar import samlidar, view
+
+	'''
+	config = {
+		"name": "segment",
+		"input_filter": ".*non_ground.*",
+		"input_feature": {
+			"point": "xyzrgb"
+		},
+		"config": {
+			"model": "pointnet_city.pth",
+			"type": "SAM"
+		},
+		"output_tag": "{class}"	
+	}
+	'''
+	
+	if len(dataset) == 0:
+		return None
+
+	model_path = config['model']
+	model_type = config['type']
+	if model_type != 'SAM': # TBD. add more models
+		return None
+
+	# SAM based model
+	model = samlidar.SamLidar(ckpt_path=model_path)
+	sam_view = config['view']
+	viewpoint = view.TopView()
+	if sam_view == 'side':
+		viewpoint = view.SideView()
+	elif sam_view == 'front':
+		viewpoint = view.FrontView()
+	
+	random_color = False
+
+	inFile = None
+	outputs = []
+	for i, item in tqdm(enumerate(dataset), desc='make_classify'):
+		name = item['name']
+		input_fname = item['input']
+		output_fname = item['output']
+		if not os.path.exists(input_fname):
+			continue
+		active = item['active']
+		if active == False:	
+			continue
+
+		cloud = model.read(input_fname) # XYZRGB(0-255)
+		labels, *_ = model.segment(points=cloud, view=viewpoint, image_path="./temp/raster.tif", labels_path="./temp/labeled.tif")
+
+		unique_labels = np.unique(labels)
+		for label in unique_labels:
+			seg_points = cloud[labels == label]
+
+			header = laspy.LasHeader(point_format=3, version="1.3")
+			outFile = laspy.LasData(header=header)
+			outFile.xyz = seg_points[:, :3]
+
+			point_shape = seg_points.shape[1]
+			if point_shape > 3:
+				outFile.red = seg_points[:, 3].astype(int)
+				outFile.green = seg_points[:, 4].astype(int)
+				outFile.blue = seg_points[:, 5].astype(int)
+
+			outFile.add_extra_dim(laspy.ExtraBytesParams(name="segment_id", type=np.int32))
+			# outFile.segment_id = label
+
+			if random_color:
+				outFile.points.red = [random.randint(0, 255)] * len(outFile.points)
+				outFile.points.green = [random.randint(0, 255)] * len(outFile.points)
+				outFile.points.blue = [random.randint(0, 255)] * len(outFile.points)
+
+			output_label_fname = output_fname.format(segment=f'{label}')
+			outFile.write(output_label_fname)
+			seg = {'name': f'{name}_{label}', 'output': output_label_fname}
+			outputs.append(seg)
+
 	return outputs
 
 def make_footprints(dataset, config):
@@ -567,6 +668,7 @@ def scan_to_model_process(args, progress_tqdm=tqdm):
 		'csf': filtering_csf,
 		'color': filtering_color,
 		'cluster': make_clusters,
+		'segment': make_segment,
 		'footprint': make_footprints,
 		'LoD': make_lod1_geometry,
 		'sheet': make_spreadsheet, 
@@ -575,46 +677,49 @@ def scan_to_model_process(args, progress_tqdm=tqdm):
 
 	outputs_result = []
 
-	pipeline = load_pipeline(args.pipeline)
-	make_folders(args.output)
+	try:
+		pipeline = load_pipeline(args.pipeline)
+		make_folders(args.output)
 
-	dataset = [{
-		"input": args.input,
-		"output": args.output,
-		"active": True}]
+		dataset = [{
+			"input": args.input,
+			"output": args.output,
+			"active": True}]
 
-	outputs_result = []
-	output = dataset
-	index = 0
-	for stage in progress_tqdm(pipeline, desc='scan to model processing...'):
-		name = stage['name']
-		output_tag = ''
-		if 'output_tag' in stage:
-			output_tag = stage['output_tag']
-		input_filter = ''
-		if 'input_filter' in stage:
-			input_filter = stage['input_filter']
+		output = dataset
+		index = 0
+		for stage in progress_tqdm(pipeline, desc='scan to model processing...'):
+			name = stage['name']
+			output_tag = ''
+			if 'output_tag' in stage:
+				output_tag = stage['output_tag']
+			input_filter = ''
+			if 'input_filter' in stage:
+				input_filter = stage['input_filter']
 
-		if index == 0:
-			dataset = update_module_output(name, output_tag, output)
-		else:
-			dataset = update_output_to_input(name, output_tag, output)
-		if len(input_filter):
-			dataset = update_active_inputs(dataset, 'name', input_filter, True)
+			if index == 0:
+				dataset = update_module_output(name, output_tag, output)
+			else:
+				dataset = update_output_to_input(name, output_tag, output)
+			if len(input_filter):
+				dataset = update_active_inputs(dataset, 'name', input_filter, True)
 
-		config = stage['config']
-		if 'csf.ground' in config:
-			ground_fname = get_value_from_name(outputs_result[0]['dataset'], 'name', 'ground', 'input') # TBD. should be generized.
-			config['ground'] = ground_fname
+			config = stage['config']
+			if 'csf.ground' in config:
+				ground_fname = get_value_from_name(outputs_result[0]['dataset'], 'name', 'ground', 'input') # TBD. should be generized.
+				config['ground'] = ground_fname
 
-		output = function_map[name](dataset, config)
-		result = {
-			'name': name,
-			'dataset': output.copy()
-		}
-		outputs_result.append(result)
-		index += 1
-
+			output = function_map[name](dataset, config)
+			result = {
+				'name': name,
+				'dataset': output.copy()
+			}
+			outputs_result.append(result)
+			index += 1
+	except Exception as e:
+		print(e)
+		traceback.print_exc()
+		
 	return outputs_result
 
 def main():
@@ -626,9 +731,10 @@ def main():
 	# argparser.add_argument("--output", default="./output/belleview/belleview.las", required=False, help="Output file name")
 	# argparser.add_argument("--input", default="./input/downsampledlesscloudEURO3.las", required=False, help="Input file name")
 	# argparser.add_argument("--output", default="./output/euro3/EURO3.las", required=False, help="Output file name")
-	argparser.add_argument("--input", default=f"{module_path}/input/OTP_EPSG26910_5703_38_-122_ca_sunrise_memorial.las", required=False, help="Input file name")
-	argparser.add_argument("--output", default=f"{module_path}/output/opt/sunrise.las", required=False, help="Output file name")
-	argparser.add_argument("--pipeline", default=f"{module_path}/pipeline.json", required=False, help="pipeline file name")
+	# argparser.add_argument("--input", default=f"{module_path}/input/OTP_EPSG26910_5703_38_-122_ca_sunrise_memorial.las", required=False, help="Input file name")
+	argparser.add_argument("--input", default=f"{module_path}/input/city_building.las", required=False, help="Input file name")
+	argparser.add_argument("--output", default=f"{module_path}/output/city/city_building.las", required=False, help="Output file name")
+	argparser.add_argument("--pipeline", default=f"{module_path}/pipeline_segment.json", required=False, help="pipeline file name")
 	args = argparser.parse_args()
 
 	scan_to_model_process(args)
