@@ -6,6 +6,7 @@
 #   0.1: initial implementation
 #   0.15: add pipeline architecture
 #   0.3: refactoring
+#   0.4: add SAM model for segmentation using CUDA
 # function: clustring. filtering. make footprints. make LoD1. make spreadsheet
 # license: MIT license
 # reference:
