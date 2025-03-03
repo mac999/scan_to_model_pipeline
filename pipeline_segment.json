@@ -1,0 +1,46 @@
+[
+	{            
+		"name": "csf",
+		"config": {
+			"cloth_resolution": 1.0, 
+			"rigidness": 3,
+			"time_step": 0.65, 
+			"class_threshold": 0.5, 
+			"interations": 500 
+		},
+		"output_tag": "{segment}_{cloth_resolution}"
+	}, 
+	{
+		"name": "segment",
+		"input_filter": ".*non_ground.*",
+		"input_feature": {
+			"point": "xyzrgb"
+		},
+		"config": {
+			"model": "sam_vit_h_4b8939.pth",
+			"desc": "scan to city segmentation",
+			"type": "SAM"
+		},
+		"output_tag": "{segment}"
+	},
+	{
+		"name": "footprint",
+		"config": {
+			"alpha_shape_factor": 0.2, 
+			"simplify_tolerance": 0.1
+		}, 
+		"output_tag": "{segment}"
+	}, 
+	{
+		"name": "LoD",
+		"config": {
+			"csf.ground": "$ground"
+		}
+	},
+	{
+		"name": "sheet",
+		"config": {
+			"merge": true
+		}
+	}
+]
