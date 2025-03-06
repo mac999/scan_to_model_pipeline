@@ -10,6 +10,7 @@ The scan to model pipeline (SMP) is an open source tool that automatically gener
 - LAS, PLY support
 
 ## Examples
+You can find the LAS, LAZ sample files in this github and [google drive](https://drive.google.com/drive/folders/1XkKOkItfRY7n28lCRmLmpJ_I_uZo6E7L?usp=sharing).
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/scan_to_model_pipeline.gif)
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image1.PNG)
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image2.PNG)
