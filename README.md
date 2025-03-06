@@ -27,6 +27,7 @@ It's still in its early stages, but if you have the will, you can improve the pa
 ![web application as demo version](https://github.com/mac999/scan_to_model_pipeline/blob/main/image8.gif)
 - 0.3: refactoring
 - 0.4: support SAM model for segmentation using CUDA
+![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image8.PNG)
    
 # Install
 To install the required dependencies, you can use:
