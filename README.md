@@ -9,6 +9,8 @@ The scan to model pipeline (SMP) is an open source tool that automatically gener
 - Pipeline config file support (refer to pipeline config section)
 - LAS, PLY support
 
+This is the simplified version for [Scan to BIM pipeline](https://github.com/mac999/scan_to_bim_pipeline) in R&D project
+
 ## Examples
 You can find the LAS, LAZ sample files in this github and [google drive](https://drive.google.com/drive/folders/1XkKOkItfRY7n28lCRmLmpJ_I_uZo6E7L?usp=sharing).
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/scan_to_model_pipeline.gif)
