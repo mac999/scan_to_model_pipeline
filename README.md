@@ -18,6 +18,7 @@ You can find the LAS, LAZ sample files in this github and [google drive](https:/
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image2.PNG)
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image3.PNG)
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image4.PNG)
+![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image9.png)
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image5.PNG)
 ![Pipeline Overview](https://github.com/mac999/scan_to_model_pipeline/blob/main/image6.PNG)
 
