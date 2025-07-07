@@ -87,6 +87,23 @@ The pipeline consists of stages such as clustring with CSF, footprint and LoD ge
 	}
 ]
 ```
+Deep Learning Model like SAM segmentation config can be defined like below. 
+```
+	{
+		"name": "segment",
+		"input_filter": ".*non_ground.*",
+		"input_feature": {
+			"point": "xyzrgb"
+		},
+		"config": {
+			"model": "sam_vit_h_4b8939.pth",
+			"desc": "scan to city segmentation",
+			"type": "SAM",
+			"view": "top"
+		},
+		"output_tag": "{segment}"
+	}
+```
 
 ## color map 
 Color maps can be used for PCD clustering, but the current version is not complete.
