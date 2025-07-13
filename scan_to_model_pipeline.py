@@ -6,7 +6,7 @@
 #   0.1: initial implementation
 #   0.15: add pipeline architecture
 #   0.3: refactoring
-#   0.4: add SAM model for segmentation using CUDA
+#   0.4: support SAM model for segmentation using CUDA
 # function: clustring. filtering. make footprints. make LoD1. make spreadsheet
 # license: MIT license
 # reference:
@@ -50,7 +50,7 @@ def filtering_csf(dataset, config):
 	for item in tqdm(dataset, desc='filtering_csf'):
 		input_fname = item['input']
 		output_fname = item['output']
-		if item['active'] == False:
+		if not item.get('active', True):
 			continue
 
 		inFile = laspy.read(input_fname) # read a las file
@@ -95,26 +95,29 @@ def filtering_color(dataset, config):
 	if len(dataset) == 0:
 		return None
 
-	filter_fname = config['filter']
 	colormap = None
-	with open(filter_fname) as json_file:
-		colormap = json.load(json_file)
+	filter_data = config['filter']
+	if isinstance(filter_data, list):
+		colormap = filter_data
+	else:
+		with open(filter_data) as json_file:
+			colormap = json.load(json_file)
+			colormap = colormap['filter']
 
 	outputs = []
 	for item in tqdm(dataset, desc='filtering_color'):
 		input_fname = item['input']
 		output_fname = item['output']
-		if item['active'] == False:
+		if not item.get('active', True):
 			continue
 
 		inFile = laspy.read(input_fname) # read a las file
 		points = inFile.points
-		red = np.right_shift(inFile.red, 8).astype(np.uint8) # rgb = np.vstack((inFile.red, inFile.green, inFile.blue)).transpose() # extract x, y, z and put into a list
-		green = np.right_shift(inFile.green, 8).astype(np.uint8) # https://github.com/strawlab/python-pcl/issues/171
-		blue = np.right_shift(inFile.blue, 8).astype(np.uint8)
+		# red = np.right_shift(inFile.red, 8).astype(np.uint8) # rgb = np.vstack((inFile.red, inFile.green, inFile.blue)).transpose() # extract x, y, z and put into a list
+		# green = np.right_shift(inFile.green, 8).astype(np.uint8) # https://github.com/strawlab/python-pcl/issues/171
+		# blue = np.right_shift(inFile.blue, 8).astype(np.uint8)
 
-		outputs = []
-		for cm in colormap['segment']:
+		for cm in colormap:
 			name = cm['name']
 			if 'RGB1' not in cm or 'RGB2' not in cm:
 				continue
@@ -122,19 +125,21 @@ def filtering_color(dataset, config):
 			max_rgb = cm['RGB2']
 
 			# Create a mask based on RGB values
-			mask = ((red >= min_rgb[0]) & (red <= max_rgb[0]) &
-					(green >= min_rgb[1]) & (green <= max_rgb[1]) &
-					(blue >= min_rgb[2]) & (blue <= max_rgb[2]))
+			mask = ((inFile.red >= min_rgb[0]) & (inFile.red <= max_rgb[0]) &
+					(inFile.green >= min_rgb[1]) & (inFile.green <= max_rgb[1]) &
+					(inFile.blue >= min_rgb[2]) & (inFile.blue <= max_rgb[2]))
 
 			# Filter points based on the mask
 			filtered_points = points[mask]
+			if len(filtered_points) == 0:
+				continue
 
 			output_seg_fname = output_fname.format(segment=name)
 			outFile = laspy.LasData(inFile.header)
 			outFile.points = filtered_points 
 			outFile.write(output_seg_fname)
 
-			seg = {'name': name, 'output': output_seg_fname}
+			seg = {'name': f'{name}', 'output': output_seg_fname}
 			outputs.append(seg)
 
 	return outputs
@@ -153,8 +158,7 @@ def make_clusters(dataset, config):
 		name = item['name']
 		input_fname = item['input']
 		output_fname = item['output']
-		active = item['active']
-		if active == False:	
+		if not item.get('active', True):
 			continue
 
 		inFile = laspy.read(input_fname)
@@ -227,36 +231,10 @@ def make_clusters(dataset, config):
 		 		
 	return outputs
 
-def make_segment(dataset, config):
-	if len(dataset) == 0:
-		return None
-
-	from segment_lidar import samlidar, view
-
-	'''
-	config = {
-		"name": "segment",
-		"input_filter": ".*non_ground.*",
-		"input_feature": {
-			"point": "xyzrgb"
-		},
-		"config": {
-			"model": "pointnet_city.pth",
-			"type": "SAM"
-		},
-		"output_tag": "{class}"	
-	}
-	'''
-	
-	if len(dataset) == 0:
-		return None
-
-	model_path = config['model']
-	model_type = config['type']
-	if model_type != 'SAM': # TBD. add more models
-		return None
-
+def make_segment_sam_model(dataset, config):
 	# SAM based model
+	from segment_lidar import samlidar, view
+	model_path = config['model']
 	model = samlidar.SamLidar(ckpt_path=model_path)
 	sam_view = config['view']
 	viewpoint = view.TopView()
@@ -275,8 +253,7 @@ def make_segment(dataset, config):
 		output_fname = item['output']
 		if not os.path.exists(input_fname):
 			continue
-		active = item['active']
-		if active == False:	
+		if not item.get('active', True):
 			continue
 
 		cloud = model.read(input_fname) # XYZRGB(0-255)
@@ -308,8 +285,31 @@ def make_segment(dataset, config):
 			outFile.write(output_label_fname)
 			seg = {'name': f'{name}_{label}', 'output': output_label_fname}
 			outputs.append(seg)
-
 	return outputs
+
+def make_segment(dataset, config):
+	if len(dataset) == 0:
+		return None
+
+	'''
+	config = {
+		"name": "segment",
+		"input_filter": ".*non_ground.*",
+		"input_feature": {
+			"point": "xyzrgb"
+		},
+		"config": {
+			"model": "pointnet_city.pth",
+			"type": "SAM"
+		},
+		"output_tag": "{class}"	
+	}
+	'''
+
+	model_type = config['type']
+	if model_type == 'SAM':
+		return make_segment_sam_model(dataset, config)
+	return None
 
 def make_footprints(dataset, config):
 	if len(dataset) == 0:
@@ -331,60 +331,70 @@ def make_footprints(dataset, config):
 		if os.path.exists(input_fname) == False:
 			continue
 
-		inFile = laspy.read(input_fname)
-		points = inFile.points
-		xyz = np.vstack((inFile.x, inFile.y, inFile.z)).transpose()
+		try:
+			inFile = laspy.read(input_fname)
+			points = inFile.points
+			xyz = np.vstack((inFile.x, inFile.y, inFile.z)).transpose()
 
-		# projection to 2D and get convex hull index
-		xy = np.vstack((inFile.x, inFile.y)).transpose()
-		alpha_shape = alphashape(xy, alpha=alpha_shape_factor) # https://pypi.org/project/alphashape/
-		hull_points = []
-		if alpha_shape.geom_type == 'MultiPolygon':	# because of the alpha_shape.geom_type is MultiPolygon, we need to find the largest polygon
-			for polygon in alpha_shape.geoms:
-				if len(hull_points) < len(polygon.exterior.coords):
-					hull_points = polygon.exterior.coords # hull_points.extend(polygon.exterior.coords)
-			hull_points = np.array(hull_points)
-		else: 
-			hull_points = np.array(alpha_shape.exterior.coords)
+			# projection to 2D and get convex hull index
+			xy = np.vstack((inFile.x, inFile.y)).transpose()
+			alpha_shape = alphashape(xy, alpha=alpha_shape_factor) # https://pypi.org/project/alphashape/
+			hull_points = []
+			if alpha_shape.geom_type == 'MultiPolygon':	# because of the alpha_shape.geom_type is MultiPolygon, we need to find the largest polygon
+				for polygon in alpha_shape.geoms:
+					if len(hull_points) < len(polygon.exterior.coords):
+						hull_points = polygon.exterior.coords # hull_points.extend(polygon.exterior.coords)
+				hull_points = np.array(hull_points)
+			elif alpha_shape.geom_type == 'Polygon':
+				hull_points = np.array(alpha_shape.exterior.coords)
+			elif alpha_shape.geom_type == 'LineString':
+				hull_points = np.array(alpha_shape.coords)
+			else:
+				print(f'Unsupported geometry type: {alpha_shape.geom_type}')
+				continue
 
-		polygon = Polygon(hull_points)
-		simplified_polygon = polygon.simplify(tolerance=simplify_tolerance)
-		simplified_hull_points = np.array(simplified_polygon.exterior.coords)
-		if len(simplified_hull_points) < 2:
+			polygon = Polygon(hull_points)
+			simplified_polygon = polygon.simplify(tolerance=simplify_tolerance)
+			simplified_hull_points = np.array(simplified_polygon.exterior.coords)
+			if len(simplified_hull_points) < 2:
+				continue
+			if np.array_equal(simplified_hull_points[0], simplified_hull_points[len(simplified_hull_points) - 1]):
+				simplified_hull_points = simplified_hull_points[:-1]
+
+			idx = index.Index()
+			for j, point in enumerate(xy):
+				idx.insert(j, (*point, *point)) 
+
+			footprint_indices = []
+			for j, point in enumerate(simplified_hull_points):
+				matches = list(idx.intersection(point))
+				if len(matches) > 0:
+					vertex_index = matches[0]
+					footprint_indices.append(vertex_index)
+				# for k, hull_point in enumerate(simplified_hull_points):
+					# if np.array_equal(point, hull_point):
+
+			if len(footprint_indices) == 0:
+				continue
+
+			# make concave hull using alpha shape
+			# polygon_xyz = []
+			# hull = ConvexHull(xy) # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.ConvexHull.html, http://www.qhull.org/html/qh-optq.htm
+			# for simplex in hull.simplices: 
+			# 	polygon_xyz.append(xyz[simplex])
+
+			# save polygon_xy to las file
+			output_cluster_fname = output_fname.format(segment=f'{i}')
+			outFile = laspy.LasData(inFile.header)
+			outFile.points = points[footprint_indices] # [hull.simplices] # hull.vertices] # polygon_xyz
+			outFile.write(output_cluster_fname)
+
+			seg = {'name': name, 'output': output_cluster_fname}
+			outputs.append(seg)
+		except Exception as e:
+			print(f'Error in make_footprints: {e}')
+			traceback.print_exc()
 			continue
-		if np.array_equal(simplified_hull_points[0], simplified_hull_points[len(simplified_hull_points) - 1]):
-			simplified_hull_points = simplified_hull_points[:-1]
-
-		idx = index.Index()
-		for j, point in enumerate(xy):
-			idx.insert(j, (*point, *point)) 
-
-		footprint_indices = []
-		for j, point in enumerate(simplified_hull_points):
-			matches = list(idx.intersection(point))
-			if len(matches) > 0:
-				vertex_index = matches[0]
-				footprint_indices.append(vertex_index)
-			# for k, hull_point in enumerate(simplified_hull_points):
-				# if np.array_equal(point, hull_point):
-
-		if len(footprint_indices) == 0:
-			continue
-
-		# make concave hull using alpha shape
-		# polygon_xyz = []
-		# hull = ConvexHull(xy) # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.ConvexHull.html, http://www.qhull.org/html/qh-optq.htm
-		# for simplex in hull.simplices: 
-		# 	polygon_xyz.append(xyz[simplex])
-
-		# save polygon_xy to las file
-		output_cluster_fname = output_fname.format(segment=f'{i}')
-		outFile = laspy.LasData(inFile.header)
-		outFile.points = points[footprint_indices] # [hull.simplices] # hull.vertices] # polygon_xyz
-		outFile.write(output_cluster_fname)
-
-		seg = {'name': name, 'output': output_cluster_fname}
-		outputs.append(seg)
 
 	return outputs
 
@@ -667,7 +677,7 @@ def get_pipeline_stage(pipeline, name):
 def scan_to_model_process(args, progress_tqdm=tqdm):
 	function_map = {
 		'csf': filtering_csf,
-		'color': filtering_color,
+		'filtercolor': filtering_color,
 		'cluster': make_clusters,
 		'segment': make_segment,
 		'footprint': make_footprints,
@@ -733,9 +743,16 @@ def main():
 	# argparser.add_argument("--input", default="./input/downsampledlesscloudEURO3.las", required=False, help="Input file name")
 	# argparser.add_argument("--output", default="./output/euro3/EURO3.las", required=False, help="Output file name")
 	# argparser.add_argument("--input", default=f"{module_path}/input/OTP_EPSG26910_5703_38_-122_ca_sunrise_memorial.las", required=False, help="Input file name")
-	argparser.add_argument("--input", default=f"{module_path}/input/city_building.las", required=False, help="Input file name")
-	argparser.add_argument("--output", default=f"{module_path}/output/city/city_building.las", required=False, help="Output file name")
-	argparser.add_argument("--pipeline", default=f"{module_path}/pipeline_segment.json", required=False, help="pipeline file name")
+	# argparser.add_argument("--input", default=f"{module_path}/input/city_building.las", required=False, help="Input file name")
+	'''
+	argparser.add_argument("--input", default=f"{module_path}/input/belleview_group.las", required=False, help="Input file name")
+	argparser.add_argument("--output", default=f"{module_path}/output/city/belleview_group.las", required=False, help="Output file name")
+	argparser.add_argument("--pipeline", default=f"{module_path}/pipeline_segment_model.json", required=False, help="pipeline file name")
+	'''
+	argparser.add_argument("--input", default=f"{module_path}/input/ca_sunrise_memorial.las", required=False, help="Input file name")
+	argparser.add_argument("--output", default=f"{module_path}/output/ground/ca_sunrise_memorial.las", required=False, help="Output file name")
+	argparser.add_argument("--pipeline", default=f"{module_path}/pipeline_segment_lidar.json", required=False, help="pipeline file name")
+
 	args = argparser.parse_args()
 
 	scan_to_model_process(args)

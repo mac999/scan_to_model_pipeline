@@ -4,7 +4,7 @@
     "description": "segmentation using color map",
     "author": "",
     "email": "",
-    "segment": [
+    "filter": [
         {
             "name": "house",
             "RGB1": [95, 108, 118],
